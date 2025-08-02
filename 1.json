@@ -1,0 +1,46 @@
+{
+  "apartments": {
+    "flat1": {
+      "name": "Mohamed's Apartment",
+      "rooms": {
+        "room1": {
+          "name": "Living Room",
+          "devices": {
+            "device1": {
+              "type": "light",
+              "name": "Ceiling Light",
+              "status": true
+            },
+            "device2": {
+              "type": "fan",
+              "name": "Fan",
+              "status": false
+            }
+          },
+          "sensors": {
+            "sensors1": {
+              "name": "temp",
+              "value": 26.5,
+              "unit": "°C"
+            },
+            "sensors2": {
+              "name": "humidity",
+              "value": 55,
+              "unit": "%"
+            }
+          }
+        },
+        "room3": {
+          "name": "ملخيه",
+          "devices": {
+            "device4": {
+              "type": "ac",
+              "name": "AC",
+              "status": true
+            }
+          }
+        }
+      }
+    }
+  }
+}
