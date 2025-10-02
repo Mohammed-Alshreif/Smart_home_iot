@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "416541870242",
+    "firebase_url": "https://esptest1-edcd8-default-rtdb.firebaseio.com",
+    "project_id": "esptest1-edcd8",
+    "storage_bucket": "esptest1-edcd8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:416541870242:android:691462a2f33122cce76ffb",
+        "android_client_info": {
+          "package_name": "com.example.espiot"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB-1NAEfP8Br1B3nBexJ_LK82URzMoZXvU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
