@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../widgets/device_tile.dart';
-import 'sensors_graph_screen.dart'; // ✅ تأكد إنك ضايف ملف الجراف
+import 'sensors_graph_screen.dart';
 
 class DevicesScreen extends StatelessWidget {
   final String apartmentId;
@@ -22,7 +22,7 @@ class DevicesScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
-          // ✅ زر عرض بيانات الحساسات
+          // زر عرض بيانات الحساسات
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: ElevatedButton.icon(
@@ -65,21 +65,71 @@ class DevicesScreen extends StatelessWidget {
                 }
 
                 Map data = snapshot.data!.snapshot.value as Map;
-                List devices = data.entries.map((e) => {
-                      'id': e.key,
-                      'name': e.value['name'] ?? 'بدون اسم',
-                      'status': e.value['status'] ?? false,
-                    }).toList();
+                List devices = data.entries.map((e) {
+                  final dev = Map<String, dynamic>.from(e.value);
+                  return {
+                    'id': e.key,
+                    'name': dev['name'] ?? 'بدون اسم',
+                    'type': dev['type'] ?? 'switch',
+                    'status': dev['status'] ?? false,
+                    'value': dev['value'] ?? 0,
+                    'min': dev['min'] ?? 0,
+                    'max': dev['max'] ?? 100,
+                    'unit': dev['unit'] ?? '',
+                  };
+                }).toList();
 
                 return ListView.builder(
                   padding: const EdgeInsets.all(12),
                   itemCount: devices.length,
                   itemBuilder: (context, index) {
-                    return DeviceTile(
-                      apartmentId: apartmentId,
-                      roomId: roomId,
-                      device: devices[index],
-                    );
+                    final device = devices[index];
+
+                    if (device['type'] == 'knob') {
+                      // ✅ لو الجهاز نوعه knob → Slider
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(device['name'],
+                                  style: const TextStyle(
+                                      fontSize: 16, fontWeight: FontWeight.bold)),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Slider(
+                                      value: (device['value'] as num).toDouble(),
+                                      min: (device['min'] as num).toDouble(),
+                                      max: (device['max'] as num).toDouble(),
+                                      divisions: ((device['max'] - device['min'])).toInt(),
+                                      label:
+                                          "${device['value']} ${device['unit']}",
+                                      onChanged: (val) {
+                                        FirebaseDatabase.instance
+                                            .ref(
+                                                'apartments/$apartmentId/rooms/$roomId/devices/${device['id']}/value')
+                                            .set(val.round());
+                                      },
+                                    ),
+                                  ),
+                                  Text("${device['value']} ${device['unit']}"),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    } else {
+                      // ✅ لو device عادي (switch)
+                      return DeviceTile(
+                        apartmentId: apartmentId,
+                        roomId: roomId,
+                        device: device,
+                      );
+                    }
                   },
                 );
               },

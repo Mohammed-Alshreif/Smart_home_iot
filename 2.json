@@ -1,0 +1,56 @@
+{
+  "apartments": {
+    "flat1": {
+      "name": "Mansoura University(MU)",
+      "rooms": {
+        "room1": {
+          "devices": {
+            "device1": {
+              "name": "Servo device",
+              "status": true,
+              "type": "light"
+            },
+            "device2": {
+              "max": 100,
+              "min": 0,
+              "name": "Motor Speed",
+              "type": "knob",
+              "unit": "%",
+              "value": 45
+            },
+            "device3": {
+              "name": "Motor",
+              "status": true
+            }
+          },
+          "name": "Irrigation System",
+          "sensors": {
+            "sensors1": {
+              "name": "temp",
+              "unit": "°C",
+              "value": 24.4
+            },
+            "sensors2": {
+              "name": "humidity",
+              "unit": "%",
+              "value": 95
+            },
+            "sensors3": {
+              "name": "soil",
+              "unit": "%",
+              "value": 100
+            },
+            "sensors4": {
+              "name": "waterLevel",
+              "unit": "cm",
+              "value": 34
+            }
+          }
+        }
+      }
+    },
+    "flat2": {
+      "name": "GUC"
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import 'dart:html' as html; // ✅ تستخدم لحفظ الملف على الويب
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -11,14 +11,13 @@ class SensorsGraphScreen extends StatefulWidget {
   const SensorsGraphScreen({super.key, required this.apartmentId, required this.roomId});
 
   @override
-  
   State<SensorsGraphScreen> createState() => _SensorsGraphScreenState();
 }
 
 class _SensorsGraphScreenState extends State<SensorsGraphScreen> {
   Map<String, List<FlSpot>> sensorData = {};
-  List<List<dynamic>> csvData = [["Timestamp", "Sensor", "Value"]];
   List<String> sensorNames = [];
+  List<Map<String, dynamic>> rawData = []; // تخزين القراءات كصفوف
   int counter = 0;
   final List<Color> colors = [
     Colors.red, Colors.blue, Colors.green,
@@ -26,11 +25,31 @@ class _SensorsGraphScreenState extends State<SensorsGraphScreen> {
   ];
 
   void _saveCSVWeb() {
-    if (csvData.length <= 1) {
+    if (rawData.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("⚠️ لا توجد بيانات لحفظها")),
       );
       return;
+    }
+
+    // تجهيز الأعمدة: Timestamp + أسماء الحساسات
+    List<List<dynamic>> csvData = [];
+    csvData.add(["Timestamp", ...sensorNames]);
+
+    for (var row in rawData) {
+      List<dynamic> csvRow = [];
+      // ✅ تاريخ مضبوط: YYYY-MM-DD HH:mm:ss
+      DateTime ts = row["timestamp"];
+      String formatted = "${ts.year}-${ts.month.toString().padLeft(2, '0')}-${ts.day.toString().padLeft(2, '0')} "
+                         "${ts.hour.toString().padLeft(2, '0')}:${ts.minute.toString().padLeft(2, '0')}:${ts.second.toString().padLeft(2, '0')}";
+      csvRow.add(formatted);
+
+      // القيم بالترتيب
+      for (var name in sensorNames) {
+        csvRow.add(row[name] ?? "");
+      }
+
+      csvData.add(csvRow);
     }
 
     final csv = const ListToCsvConverter().convert(csvData);
@@ -74,6 +93,7 @@ class _SensorsGraphScreenState extends State<SensorsGraphScreen> {
           }
 
           final Map data = snapshot.data!.snapshot.value as Map;
+          Map<String, dynamic> row = {"timestamp": DateTime.now()};
 
           data.forEach((key, value) {
             try {
@@ -85,16 +105,18 @@ class _SensorsGraphScreenState extends State<SensorsGraphScreen> {
 
               sensorData.putIfAbsent(sensorName, () => []);
               sensorData[sensorName]!.add(FlSpot(counter.toDouble(), sensorValue));
-              csvData.add([DateTime.now().toIso8601String(), sensorName, sensorValue]);
+
+              row[sensorName] = sensorValue;
 
               if (!sensorNames.contains(sensorName)) {
                 sensorNames.add(sensorName);
               }
             } catch (_) {
-              // تجاهل الحساسات غير الصالحة
+              // تجاهل الحساسات الغير صالحة
             }
           });
 
+          rawData.add(row);
           counter++;
 
           return Padding(

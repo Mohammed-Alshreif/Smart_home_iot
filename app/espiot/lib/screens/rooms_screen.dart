@@ -22,17 +22,17 @@ class RoomsScreen extends StatelessWidget {
         stream: roomsRef.onValue,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(child: Text('⚠️ حصلت مشكلة في الاتصال بقاعدة البيانات'));
+            return const Center(child: Text(' There was a problem connecting to the database ⚠️'));
           }
 
           if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
-            return const Center(child: Text('لا يوجد غرف حالياً'));
+            return const Center(child: Text(' No rooms available. Please add a room. 🏠'));
           }
 
           Map data = snapshot.data!.snapshot.value as Map;
           List rooms = data.entries.map((e) => {
             'id': e.key,
-            'name': e.value['name'] ?? 'بدون اسم',
+            'name': e.value['name'] ?? 'Unnamed Room',
           }).toList();
 
           return ListView.builder(
@@ -43,7 +43,7 @@ class RoomsScreen extends StatelessWidget {
               return AnimatedCard(
                 icon: Icons.meeting_room,
                 title: room['name'],
-                subtitle: 'اضغط لعرض الأجهزة',
+                subtitle: 'Tap to view devices',
                 onTap: () {
                   Navigator.push(
                     context,

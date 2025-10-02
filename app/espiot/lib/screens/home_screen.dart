@@ -12,7 +12,7 @@ class HomeScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Apartments"),
+        title: const Text("Systems"),
         centerTitle: true,
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
@@ -21,17 +21,17 @@ class HomeScreen extends StatelessWidget {
         stream: apartmentsRef.onValue,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return const Center(child: Text('⚠️ حصلت مشكلة في الاتصال بقاعدة البيانات'));
+            return const Center(child: Text('There was a problem connecting to the database ⚠️'));
           }
 
           if (!snapshot.hasData || snapshot.data!.snapshot.value == null) {
-            return const Center(child: Text('لا يوجد شقق متاحة حاليًا'));
+            return const Center(child: Text('NO Systems Found '));
           }
 
           Map data = snapshot.data!.snapshot.value as Map;
           List apartments = data.entries.map((e) => {
             'id': e.key,
-            'name': e.value['name'] ?? 'بدون اسم',
+            'name': e.value['name'] ?? 'Unnamed Apartment',
           }).toList();
 
           return ListView.builder(
@@ -42,7 +42,7 @@ class HomeScreen extends StatelessWidget {
               return AnimatedCard(
                 icon: Icons.apartment,
                 title: apartment['name'],
-                subtitle: 'اضغط لعرض الغرف',
+                subtitle: 'click to view the system',
                 onTap: () {
                   Navigator.push(
                     context,
