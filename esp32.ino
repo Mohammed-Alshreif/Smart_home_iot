@@ -3,6 +3,10 @@
 #include <Firebase_ESP_Client.h>
 #include <DHT.h>
 #include <ESP32Servo.h>
+#include <math.h>
+
+
+#define READ_INTERVAL_MS 4000
 
 // Helper functions
 #include "addons/TokenHelper.h"
@@ -32,7 +36,13 @@ float temp = 0;
 float hum =0;
 bool servoState;
 bool  MOTORState;
-
+//ldr flux sensor
+const int LDR_PIN = 35; // ADC pin on ESP32 (use 32, 33, 34, 35, etc.)
+// Calibration constants (must be adjusted using real measurements)
+float A = 120000.0;
+float B = 0.0055;
+long adc=0;
+float lux =0;
 //=========================================
 // Firebase
 FirebaseData fbdo;
@@ -40,7 +50,6 @@ FirebaseAuth auth;
 FirebaseConfig config;
 
 unsigned long lastReadMillis = 0;
-#define READ_INTERVAL_MS 4000
 bool signupOK = false;
 
 DHT dht(DHT_PIN, DHT_TYPE);
@@ -103,6 +112,7 @@ void setup() {
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(MOTORPIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
+  analogReadResolution(12); // Set ADC resolution to 12-bit (0 - 4095)
   dht.begin();
   servo.attach(SERVO_PIN);
   servo.write(0); // start closed
@@ -129,12 +139,13 @@ void setup() {
   config.token_status_callback = tokenStatusCallback;
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
-   if (Firebase.ready() && signupOK){
-     //=====================Motor ===================
-    Firebase.RTDB.setString(&fbdo, basePath + "room1/devices/device3/name","Motor");
-    Firebase.RTDB.setInt(&fbdo, basePath + "room1/devices/device3/status",true);
+  //  if (Firebase.ready() && signupOK){
+  //    //=====================Motor ===================
+  //   Firebase.RTDB.setString(&fbdo, basePath + "room1/devices/device3/name","Motor");
+  //   Firebase.RTDB.setInt(&fbdo, basePath + "room1/devices/device3/status",true);
     
-   }
+  //  }
+
 }
 
 void loop() {
@@ -142,18 +153,25 @@ void loop() {
     lastReadMillis = millis();
 
     // ====== Read sensors ======
-     soil = analogRead(SOIL_PIN)/40.95;
+     soil = 100-analogRead(SOIL_PIN)/40.95;
      temp = dht.readTemperature();
      hum = dht.readHumidity();
      waterLevel = readUltrasonicFiltered();
      waterLevel = (waterLevel>100)?100:waterLevel;
+     adc=0;
+     for(int i=0;i<100;i++){
+       adc+=analogRead(LDR_PIN);
+      // delay(2);
+      }
+      adc=adc/100;
+      lux = 25 * exp(adc*0.00192);
 
     // ====== Upload to Firebase ======
     // Living room sensors
     Firebase.RTDB.setInt(&fbdo, basePath + "room1/sensors/sensors1/value", temp);
     Firebase.RTDB.setInt(&fbdo, basePath + "room1/sensors/sensors2/value", hum);
 
-    // Room1 soil + water
+    // Room1 soil + water +lux
     Firebase.RTDB.setInt(&fbdo, basePath + "room1/sensors/sensors3/value", soil);
     Firebase.RTDB.setString(&fbdo, basePath + "room1/sensors/sensors3/name","soil");
     Firebase.RTDB.setString(&fbdo, basePath + "room1/sensors/sensors3/unit","%");
@@ -162,7 +180,10 @@ void loop() {
     Firebase.RTDB.setString(&fbdo, basePath + "room1/sensors/sensors4/name","waterLevel");
     Firebase.RTDB.setString(&fbdo, basePath + "room1/sensors/sensors4/unit","cm");
 
-    Serial.printf("Soil=%d Temp=%.1f Hum=%.1f Water=%ld\n", soil, temp, hum, waterLevel);
+    Firebase.RTDB.setInt(&fbdo, basePath + "room1/sensors/sensors5/value", lux);
+    Firebase.RTDB.setString(&fbdo, basePath + "room1/sensors/sensors5/name","lux sensor");
+    Firebase.RTDB.setString(&fbdo, basePath + "room1/sensors/sensors5/unit","lux");
+    Serial.printf("Soil=%d Temp=%.1f Hum=%.1f Water=%ld  lux=%.1f  adc= %d\n", soil, temp, hum, waterLevel,lux,adc);
 
     // ====== Servo device control ======
     Firebase.RTDB.setString(&fbdo, basePath + "room1/devices/device1/name","Servo device");
